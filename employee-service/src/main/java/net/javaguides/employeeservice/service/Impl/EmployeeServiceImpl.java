@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import net.javaguides.employeeservice.dto.ApiResponseDto;
 import net.javaguides.employeeservice.dto.DepartmentDto;
 import net.javaguides.employeeservice.dto.EmployeeDto;
+import net.javaguides.employeeservice.dto.OrganizationDto;
 import net.javaguides.employeeservice.entity.Employee;
 import net.javaguides.employeeservice.exception.ResourceNotFoundException;
 import net.javaguides.employeeservice.repository.EmployeeRepository;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,13 +72,20 @@ public class EmployeeServiceImpl implements EmployeeService {
                                 .bodyToMono(DepartmentDto.class)
                                 .block();
 
+        OrganizationDto organizationDto = webClient.get()
+                                .uri("http://localhost:8083/api/organizations/"+employee.getOrganizationCode())
+                                .retrieve()
+                                .bodyToMono(OrganizationDto.class)
+                                .block();
+
     //  DepartmentDto departmentDto= apiClient.getDepartmentByCode(employee.getDepartmentCode());
 
       EmployeeDto employeeDto = modelMapper.map(employee,EmployeeDto.class);
 
       ApiResponseDto apiResponseDto = new ApiResponseDto(
                                                         employeeDto,
-                                                        departmentDto
+                                                        departmentDto,
+                                                        organizationDto
                                                         );
 
       return apiResponseDto;
@@ -97,11 +106,18 @@ public class EmployeeServiceImpl implements EmployeeService {
       departmentDto.setDepartmentDescription("Research & Development department");
       departmentDto.setDepartmentName("R&D Department");
 
-        EmployeeDto employeeDto = modelMapper.map(employee,EmployeeDto.class);
+      OrganizationDto organizationDto = new OrganizationDto();
+      organizationDto.setOrganizationName("Dump Organization");
+      organizationDto.setOrganizationDescription("Dummy Organization");
+      organizationDto.setOrganizationCode("ORG-000");
+      organizationDto.setCreationDate(LocalDateTime.now());
+
+      EmployeeDto employeeDto = modelMapper.map(employee,EmployeeDto.class);
 
         ApiResponseDto apiResponseDto = new ApiResponseDto(
                 employeeDto,
-                departmentDto
+                departmentDto,
+                organizationDto
         );
 
         return apiResponseDto;
